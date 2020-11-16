@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useCallback, useEffect, useState } from "react";
 import StyleListUser from "./index.style";
 import {
   Table,
@@ -40,18 +40,31 @@ const roles = [
 ];
 
 const ListUser = () => {
+  const [form] = Form.useForm();
+
   const [visible, setVisible] = useState(false);
   const [filter, setFilter] = useState({ page_size: 20, page_id: 0 });
   const [listUser, setListUser] = useState([]);
   const [user, setUser] = useState({});
 
-  useEffect(async () => {
+  const fetchUser = useCallback(async () => {
     const res = await getUser(filter);
     setListUser(res.result);
   }, [filter]);
 
-  const handleEdit = () => {
+  useEffect(() => {
+    if (!visible) {
+      setUser({});
+    }
+  }, [visible]);
+
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
+
+  const handleEdit = (recod) => {
     setVisible(true);
+    setUser(recod);
   };
 
   const handleDelete = () => {
@@ -72,9 +85,9 @@ const ListUser = () => {
       key: "status",
       dataIndex: "status",
       render: (status) => (
-          <Tag color={status == 'ACTIVE' ? "success" : "geekblue"} key={status}>
-            {status}
-          </Tag>
+        <Tag color={status == "ACTIVE" ? "success" : "geekblue"} key={status}>
+          {status}
+        </Tag>
       ),
     },
     {
@@ -83,7 +96,7 @@ const ListUser = () => {
       render: (text, record) => (
         <Fragment>
           <Space size="middle" style={{ marginRight: 10 }}>
-            <a onClick={handleEdit}>Edit</a>
+            <a onClick={() => handleEdit(record)}>Edit</a>
           </Space>
           <Space size="middle">
             <a onClick={handleDelete}>Delete</a>
@@ -93,19 +106,39 @@ const ListUser = () => {
     },
   ];
 
-  const renderSelectStatus = () => 
-    <Select defaultValue="Chưa xác định" style={{ width: "100%" }}>
-      {statuses.map((status) => {
-        return <Option value={status.code}>{status.name}</Option>;
+  const renderSelectStatus = () => (
+    <Select
+      value={user?.status}
+      onChange={(value) => setUser({ ...user, status: value })}
+      defaultValue="Chưa xác định"
+      style={{ width: "100%" }}
+    >
+      {statuses.map((status, index) => {
+        return (
+          <Option key={index} value={status.code}>
+            {status.name}
+          </Option>
+        );
       })}
-    </Select>;
+    </Select>
+  );
 
-  const renderSelectRole = () => 
-    <Select defaultValue="Chưa xác định" style={{ width: "100%" }}>
-      {statuses.map((status) => {
-        return <Option value={status.code}>{status.name}</Option>;
+  const renderSelectRole = () => (
+    <Select
+      value={user?.role}
+      onChange={(value) => setUser({ ...user, role: value })}
+      defaultValue="Chưa xác định"
+      style={{ width: "100%" }}
+    >
+      {roles.map((status, index) => {
+        return (
+          <Option key={index} value={status.code}>
+            {status.name}
+          </Option>
+        );
       })}
-    </Select>;
+    </Select>
+  );
 
   return (
     <StyleListUser>
@@ -121,37 +154,28 @@ const ListUser = () => {
         <Col span={8}>
           <Search />
         </Col>
-        <Col span={7}>
-          {renderSelectStatus}
-        </Col>
-        <Col span={7}>
-          {renderSelectRole}
-        </Col>
+        <Col span={7}>{renderSelectStatus()}</Col>
+        <Col span={7}>{renderSelectRole()}</Col>
         <Col span={2}>
           <Button type="primary" block>
             Search
           </Button>
         </Col>
       </Row>
-      <Table columns={columns} dataSource={listUser} />
+      <Table rowKey="id" columns={columns} dataSource={listUser} />
+
       <Modal
         visible={visible}
-        title="Add new item"
         onCancel={() => setVisible(false)}
+        title="Add new item"
       >
-        <Form
-          name="normal_edit"
-          className="modal-form"
-          initialValues={{
-            remember: true,
-          }}
-        >
+        <Form form={form}>
           <Row gutter={[16, 16]}>
             <Form.Item name="name" style={{ width: "45%", marginRight: 10 }}>
               <label htmlFor="">Tên:</label>
               <Input
                 placeholder="Tên"
-                value={user.name}
+                value={user?.name}
                 onChange={(e) => setUser({ ...user, name: e.target.value })}
               />
             </Form.Item>
@@ -160,7 +184,7 @@ const ListUser = () => {
               <Input
                 type="email"
                 placeholder="Email"
-                value={user.email}
+                value={user?.email}
                 onChange={(e) => setUser({ ...user, email: e.target.value })}
               />
             </Form.Item>
@@ -170,7 +194,7 @@ const ListUser = () => {
               <label htmlFor="">Sdt:</label>
               <Input
                 placeholder="Số điện thoại"
-                value={user.phone}
+                value={user?.phone}
                 onChange={(e) => setUser({ ...user, phone: e.target.value })}
               />
             </Form.Item>
@@ -179,7 +203,7 @@ const ListUser = () => {
               <Input
                 type="text"
                 placeholder="Địa chỉ"
-                value={user.address}
+                value={user?.address}
                 onChange={(e) => setUser({ ...user, address: e.target.value })}
               />
             </Form.Item>
@@ -187,11 +211,12 @@ const ListUser = () => {
           <Row gutter={[16, 16]}>
             <Form.Item name="status" style={{ width: "45%", marginRight: 10 }}>
               <label htmlFor="">Trạng thái:</label>
-              {renderSelectStatus}
+
+              {renderSelectStatus()}
             </Form.Item>
             <Form.Item name="role" style={{ width: "45%" }}>
               <label htmlFor="">Chức vụ</label>
-              {renderSelectRole}
+              {renderSelectRole()}
             </Form.Item>
           </Row>
         </Form>
