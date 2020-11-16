@@ -34,7 +34,7 @@ export const instance = (baseURL) => {
   return axiosInstance;
 };
 
-export const apiAxios = instance("http://distributed.test/api/");
+export const apiAxios = instance("https://distributed.de-lalcool.com/api/");
 
 export function setHeaders(params) {
   const newHeaders = {

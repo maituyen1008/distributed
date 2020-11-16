@@ -38,6 +38,7 @@ const LoginForm = () => {
     }, 3000);
     return () => clearTimeout(timer);
   }, [location]);
+
   const handleLogin = async () => {
     try {
       if (!validateData()) {

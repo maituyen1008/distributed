@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import StyleListUser from "./index.style";
 import {
   Table,
@@ -10,80 +10,110 @@ import {
   Select,
   Button,
   Modal,
+  Form,
 } from "antd";
+import { getUser } from "../../store/services";
+
 const { Search } = Input;
 const { Option } = Select;
-const data = [
+
+const statuses = [
   {
-    key: "1",
-    name: "John Brown",
-    age: 32,
-    address: "New York No. 1 Lake Park",
-    tags: ["nice", "developer"],
+    name: "Hoặt động",
+    code: "ACTIVE",
   },
   {
-    key: "2",
-    name: "Jim Green",
-    age: 42,
-    address: "London No. 1 Lake Park",
-    tags: ["loser"],
-  },
-  {
-    key: "3",
-    name: "Joe Black",
-    age: 32,
-    address: "Sidney No. 1 Lake Park",
-    tags: ["cool", "teacher"],
+    name: "Chờ xác nhận",
+    code: "PENDING",
   },
 ];
+
+const roles = [
+  {
+    name: "Quản trị viên",
+    code: "ADMIN",
+  },
+  {
+    name: "Nhân viên",
+    code: "MEMBER",
+  },
+];
+
 const ListUser = () => {
   const [visible, setVisible] = useState(false);
+  const [filter, setFilter] = useState({ page_size: 20, page_id: 0 });
+  const [listUser, setListUser] = useState([]);
+  const [user, setUser] = useState({});
+
+  useEffect(async () => {
+    const res = await getUser(filter);
+    setListUser(res.result);
+  }, [filter]);
+
+  const handleEdit = () => {
+    setVisible(true);
+  };
+
+  const handleDelete = () => {
+    setVisible(true);
+  };
+
   const columns = [
     {
-      title: "Name",
+      title: "Tên",
       dataIndex: "name",
       key: "name",
       render: (text) => <a>{text}</a>,
     },
-    { title: "Age", dataIndex: "age", key: "age" },
+    { title: "Email", dataIndex: "email", key: "email" },
     { title: "Address", dataIndex: "address", key: "address" },
     {
-      title: "Tags",
-      key: "tags",
-      dataIndex: "tags",
-      render: (tags) => (
-        <>
-          {tags.map((tag) => {
-            let color = tag.length > 5 ? "geekblue" : "green";
-            if (tag === "loser") {
-              color = "volcano";
-            }
-            return (
-              <Tag color={color} key={tag}>
-                {tag.toUpperCase()}
-              </Tag>
-            );
-          })}
-        </>
+      title: "Trạng thái",
+      key: "status",
+      dataIndex: "status",
+      render: (status) => (
+          <Tag color={status == 'ACTIVE' ? "success" : "geekblue"} key={status}>
+            {status}
+          </Tag>
       ),
     },
     {
       title: "Action",
       key: "action",
       render: (text, record) => (
-        <Space size="middle">
-          <a onClick={() => setVisible(true)}>Delete</a>
-        </Space>
+        <Fragment>
+          <Space size="middle" style={{ marginRight: 10 }}>
+            <a onClick={handleEdit}>Edit</a>
+          </Space>
+          <Space size="middle">
+            <a onClick={handleDelete}>Delete</a>
+          </Space>
+        </Fragment>
       ),
     },
   ];
+
+  const renderSelectStatus = () => 
+    <Select defaultValue="Chưa xác định" style={{ width: "100%" }}>
+      {statuses.map((status) => {
+        return <Option value={status.code}>{status.name}</Option>;
+      })}
+    </Select>;
+
+  const renderSelectRole = () => 
+    <Select defaultValue="Chưa xác định" style={{ width: "100%" }}>
+      {statuses.map((status) => {
+        return <Option value={status.code}>{status.name}</Option>;
+      })}
+    </Select>;
+
   return (
     <StyleListUser>
       <Row gutter={[16, 16]}>
         <Col span={12}>List Users</Col>
         <Col flex="right" span={2} offset={10}>
           <Button block type="primary" onClick={() => setVisible(true)}>
-            New Record
+            New User
           </Button>
         </Col>
       </Row>
@@ -92,18 +122,10 @@ const ListUser = () => {
           <Search />
         </Col>
         <Col span={7}>
-          <Select defaultValue="lucy" style={{ width: "100%" }}>
-            <Option value="jack">Jack</Option>
-            <Option value="lucy">Lucy</Option>
-            <Option value="Yiminghe">yiminghe</Option>
-          </Select>
+          {renderSelectStatus}
         </Col>
         <Col span={7}>
-          <Select defaultValue="lucy" style={{ width: "100%" }}>
-            <Option value="jack">Jack</Option>
-            <Option value="lucy">Lucy</Option>
-            <Option value="Yiminghe">yiminghe</Option>
-          </Select>
+          {renderSelectRole}
         </Col>
         <Col span={2}>
           <Button type="primary" block>
@@ -111,13 +133,68 @@ const ListUser = () => {
           </Button>
         </Col>
       </Row>
-      <Table columns={columns} dataSource={data} />
+      <Table columns={columns} dataSource={listUser} />
       <Modal
         visible={visible}
         title="Add new item"
         onCancel={() => setVisible(false)}
       >
-        <p>This is content</p>
+        <Form
+          name="normal_edit"
+          className="modal-form"
+          initialValues={{
+            remember: true,
+          }}
+        >
+          <Row gutter={[16, 16]}>
+            <Form.Item name="name" style={{ width: "45%", marginRight: 10 }}>
+              <label htmlFor="">Tên:</label>
+              <Input
+                placeholder="Tên"
+                value={user.name}
+                onChange={(e) => setUser({ ...user, name: e.target.value })}
+              />
+            </Form.Item>
+            <Form.Item name="email" style={{ width: "45%" }}>
+              <label htmlFor="">Email</label>
+              <Input
+                type="email"
+                placeholder="Email"
+                value={user.email}
+                onChange={(e) => setUser({ ...user, email: e.target.value })}
+              />
+            </Form.Item>
+          </Row>
+          <Row gutter={[16, 16]}>
+            <Form.Item name="phone" style={{ width: "45%", marginRight: 10 }}>
+              <label htmlFor="">Sdt:</label>
+              <Input
+                placeholder="Số điện thoại"
+                value={user.phone}
+                onChange={(e) => setUser({ ...user, phone: e.target.value })}
+              />
+            </Form.Item>
+            <Form.Item name="address" style={{ width: "45%" }}>
+              <label htmlFor="">Address</label>
+              <Input
+                type="text"
+                placeholder="Địa chỉ"
+                value={user.address}
+                onChange={(e) => setUser({ ...user, address: e.target.value })}
+              />
+            </Form.Item>
+          </Row>
+          <Row gutter={[16, 16]}>
+            <Form.Item name="status" style={{ width: "45%", marginRight: 10 }}>
+              <label htmlFor="">Trạng thái:</label>
+              {renderSelectStatus}
+            </Form.Item>
+            <Form.Item name="role" style={{ width: "45%" }}>
+              <label htmlFor="">Chức vụ</label>
+              {renderSelectRole}
+            </Form.Item>
+          </Row>
+        </Form>
       </Modal>
     </StyleListUser>
   );

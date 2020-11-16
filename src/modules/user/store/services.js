@@ -39,7 +39,7 @@ export const changePassword = (body) =>
     return res.data;
   });
 export const getUser = (body) =>
-  apiAxios.post("user", body).then((res) => {
+  apiAxios.get("user", body).then((res) => {
     if (res.data.status === "successful") {
       return res.data;
     }

@@ -17,11 +17,11 @@ const MainLayout = ({ children, history }) => {
 
   const user = useSelector((state) => state.user.user);
 
-  useEffect(() => {
-    if (!user || !user.id) {
-      history.push("/login");
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (!user || !user.id) {
+  //     history.push("/login");
+  //   }
+  // }, []);
 
   return (
     <StyleLayout>

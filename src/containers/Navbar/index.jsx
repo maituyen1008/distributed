@@ -7,11 +7,14 @@ import {
 import { Row, Popover, Avatar, Badge } from "antd";
 
 import { BellOutlined, UserOutlined } from "@ant-design/icons";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { actions } from "../../modules/user/store";
+import { useHistory } from "react-router-dom";
 
 const Navbar = () => {
   const dispatch = useDispatch();
+  const history = useHistory();
+  const user = useSelector((state) => state.user.user);
   const notification = () => (
     <div>
       <p>Thông báo</p>
@@ -20,6 +23,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     dispatch(actions.setUserData({}));
+    history.push("/login");
   };
 
   const profile = () => (
@@ -59,8 +63,8 @@ const Navbar = () => {
               />
             </Badge>
             <StyleUserName>
-              <span className="text-info role">Admin</span>
-              <span className="text-info username">Vũ Đức Đam</span>
+              <span className="text-info role">{user.role}</span>
+              <span className="text-info username">{user.name}</span>
             </StyleUserName>
           </StyleUserProfileContainer>
         </Popover>
